@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/services/auth.service';
 import IUser from 'src/app/models/user.model';
+import { RegisterValidators } from 'src/app/user/validators/RegisterValidators';
+import { EmailTaken } from 'src/app/user/validators/EmailTaken';
 
 @Component({
     selector: 'app-register',
@@ -16,11 +18,15 @@ export class RegisterComponent {
     alertMsg: string = '';
     alertColor: string = '';
 
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService, private eTaken: EmailTaken) {}
 
     // form props
     name = new FormControl('', [Validators.required, Validators.minLength(3)]);
-    email = new FormControl('', [Validators.required, Validators.email]);
+    email = new FormControl(
+        '',
+        [Validators.required, Validators.email],
+        [this.eTaken.validate]
+    );
     age = new FormControl<number | null>(null, [
         Validators.required,
         Validators.min(18),
@@ -35,13 +41,16 @@ export class RegisterComponent {
     confirm_password = new FormControl('', [Validators.required]);
 
     // pentru a putea trimite prin input datele, trebuie separate
-    registerForm = new FormGroup({
-        name: this.name,
-        email: this.email,
-        age: this.age,
-        password: this.password,
-        confirm_password: this.confirm_password,
-    });
+    registerForm = new FormGroup(
+        {
+            name: this.name,
+            email: this.email,
+            age: this.age,
+            password: this.password,
+            confirm_password: this.confirm_password,
+        },
+        [RegisterValidators.match('password', 'confirm_password')]
+    );
 
     async register(): Promise<void> {
         this.showAlert = true;
